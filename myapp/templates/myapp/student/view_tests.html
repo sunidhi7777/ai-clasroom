@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Available Tests</h2>
+<ul>
+    {% for test in tests %}
+        <li>{{ test.title }} - {{ test.course.name }}
+            <a href="{% url 'solve_test' test.id %}" class="btn btn-primary btn-sm">Take Test</a>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

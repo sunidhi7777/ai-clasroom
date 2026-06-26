@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Manage Tests</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Create Test</button>
+</form>
+<hr>
+<h4>Your Tests:</h4>
+<ul>
+    {% for test in tests %}
+        <li>{{ test.title }} ({{ test.course.name }})
+            <a href="{% url 'add_questions' test.id %}" class="btn btn-sm btn-secondary">Add Questions</a>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

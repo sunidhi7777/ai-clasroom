@@ -1,0 +1,49 @@
+{% extends 'myapp/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Generated Test for: {{ doc.title }}</h3>
+    <p><strong>Course:</strong> {{ doc.course.name }}</p>
+
+    <div class="mt-4">
+        <h5>Multiple Choice Questions</h5>
+        {% if mcqs %}
+            <ol>
+                {% for q in mcqs %}
+                    <li>
+                        <p>{{ q.question }}</p>
+                        <ul>
+                            <li>A. {{ q.choices.a }}</li>
+                            <li>B. {{ q.choices.b }}</li>
+                            <li>C. {{ q.choices.c }}</li>
+                            <li>D. {{ q.choices.d }}</li>
+                        </ul>
+
+                        <p><strong>Correct Answer:</strong> {{ q.correct_option|upper }}</p>
+                    </li>
+                {% endfor %}
+            </ol>
+        {% else %}
+            <p>No MCQs found.</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-5">
+        <h5>Descriptive Questions</h5>
+{% if long_answers %}
+  <ol>
+    {% for q in long_answers %}
+      <li>
+        <p><strong>Q:</strong> {{ q.question }}</p>
+        <p><strong>Sample Answer:</strong> {{ q.answer }}</p>
+      </li>
+    {% endfor %}
+  </ol>
+{% else %}
+  <p>No descriptive questions found.</p>
+{% endif %}
+</div>
+
+    <a href="{% url 'teacher_dashboard' %}" class="btn mt-4" style="background-color: #2f3d4b; color: white;">← Back to Dashboard</a>
+
+</div>
+{% endblock %}

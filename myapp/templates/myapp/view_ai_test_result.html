@@ -1,0 +1,44 @@
+{% extends 'myapp/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>AI Test Result (QnA ID: {{ qna_id }})</h3>
+    <p><strong>MCQ Score:</strong> {{ score }} / {{ total }}</p>
+
+    {% if mcqs %}
+        <h4 class="mt-4">Multiple Choice Questions:</h4>
+        {% for ans in mcqs %}
+            <div class="mb-3 p-3 border rounded">
+                <p><strong>Q{{ forloop.counter }}:</strong> {{ ans.question_text }}</p>
+                <p>
+                    Your Answer: <strong>{{ ans.selected_option|upper }}</strong>
+                    {% if ans.is_correct %}
+                        <span class="text-success">✅ Correct</span>
+                    {% else %}
+                        <span class="text-danger">❌ Incorrect</span> 
+                        (Correct: <strong>{{ ans.correct_option|upper }}</strong>)
+                    {% endif %}
+                </p>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <h3>Descriptive Questions</h3>
+    {% for ans in descriptive %}
+     <div class="mb-4 p-3 border rounded">
+      <p><strong>Q:</strong> {{ ans.question_text }}</p>
+      <p><strong>Your Answer:</strong> {{ ans.descriptive_answer }}</p>
+       
+      {% if ans.score %}
+      <p><strong>Score:</strong> {{ ans.score }} / 5</p>
+      {% endif %}
+
+      {% if ans.feedback %}
+      <p><strong>Feedback:</strong> {{ ans.feedback }}</p>
+      {% endif %}
+    </div>
+    {% empty %}
+      <p>No descriptive answers found.</p>
+    {% endfor %}
+
+</div>
+{% endblock %}

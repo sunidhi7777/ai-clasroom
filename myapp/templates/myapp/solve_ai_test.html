@@ -1,0 +1,38 @@
+add a part for correctness if descriptive anser just in html along with score for that too{% extends 'myapp/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Solve AI-Generated Test</h3>
+    <form method="post">
+        {% csrf_token %}
+        {% for q in questions %}
+    <div class="mb-4">
+        <p><strong>Q{{ forloop.counter }}:</strong> {{ q.question }}</p>
+
+        {% if q.type == 'mcq' %}
+            <div>
+                <label><input type="radio" name="q_{{ forloop.counter0 }}" value="a"> {{ q.choices.a }}</label><br>
+                <label><input type="radio" name="q_{{ forloop.counter0 }}" value="b"> {{ q.choices.b }}</label><br>
+                <label><input type="radio" name="q_{{ forloop.counter0 }}" value="c"> {{ q.choices.c }}</label><br>
+                <label><input type="radio" name="q_{{ forloop.counter0 }}" value="d"> {{ q.choices.d }}</label>
+            </div>
+        {% else %}
+            <textarea name="q_{{ forloop.counter0 }}" class="form-control" rows="3" required></textarea>
+
+            {% if q.answer %}
+                        <div class="mt-2 p-2 bg-light border rounded">
+                            <p><strong>Model Answer:</strong> {{ q.answer }}</p>
+                            {% if q.score is defined %}
+                                <p><strong>Expected Score:</strong> {{ q.score }} / 5</p>
+                            {% endif %}
+                            {% if q.feedback %}
+                                <p><strong>Feedback:</strong> {{ q.feedback }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-success">Submit Test</button>
+    </form>
+</div>
+{% endblock %}

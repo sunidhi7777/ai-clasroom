@@ -1,0 +1,80 @@
+{% extends 'myapp/base.html' %}
+{% block title %}Test Result{% endblock %}
+
+{% block content %}
+<style>
+    .result-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .result-title {
+        text-align: center;
+        color: #2f3d4b;
+        margin-bottom: 30px;
+    }
+
+    .score-box {
+        font-size: 1.2rem;
+        font-weight: bold;
+        background: #e9f7ef;
+        color: #1e7e34;
+        padding: 10px 20px;
+        border-left: 6px solid #28a745;
+        margin-bottom: 30px;
+        border-radius: 5px;
+    }
+
+    .question-card {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 5px solid #007bff;
+        box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .question-card.correct {
+        border-left-color: #28a745;
+    }
+
+    .question-card.incorrect {
+        border-left-color: #dc3545;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+    }
+
+    .highlight {
+        font-weight: bold;
+    }
+</style>
+
+<div class="result-container">
+    <h2 class="result-title">{{ test.title }} - Result</h2>
+    <div class="score-box">Total Score: {{ score }}</div>
+
+    {% for answer in answers %}
+        <div class="question-card {% if answer.selected_option == answer.question.correct_option %}correct{% else %}incorrect{% endif %}">
+            <p class="highlight">Q{{ forloop.counter }}: {{ answer.question.question_text }}</p>
+            <p>(Marks: {{ answer.question.marks }})</p>
+            <ul>
+                <li><strong>✔ Correct Answer:</strong> Option {{ answer.question.correct_option }}</li>
+                <li><strong>✏️ Your Answer:</strong> Option {{ answer.selected_option }}</li>
+            </ul>
+            {% if answer.selected_option == answer.question.correct_option %}
+                <span class="badge bg-success">Correct</span>
+            {% else %}
+                <span class="badge bg-danger">Incorrect</span>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

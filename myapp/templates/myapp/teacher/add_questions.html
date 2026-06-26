@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Add Questions for {{ test.title }}</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Add Question</button>
+</form>
+<hr>
+<h4>Existing Questions:</h4>
+<ul>
+    {% for q in questions %}
+        <li>{{ q.question_text }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

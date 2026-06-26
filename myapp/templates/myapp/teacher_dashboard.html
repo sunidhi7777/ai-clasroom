@@ -1,0 +1,362 @@
+{% load filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" />
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+
+        nav {
+            background-color: #2f3d4b;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            padding: 30px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            font-size: 1rem;
+            transition: 0.3s ease-in-out;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        input,
+        select,
+        textarea {
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+        }
+
+        .course-section {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>Teacher Dashboard</nav>
+
+    <div class="logout-btn">
+        <a href="{% url 'logout' %}">
+            <button class="btn btn-light">Logout</button>
+        </a>
+    </div>
+
+    <div class="container">
+
+        <!-- Welcome Section -->
+        <div class="card">
+            <h4>Welcome, {{ user.username }}!</h4>
+        </div>
+
+        <!-- Assign Students -->
+        <div class="card">
+            <h4>Assign Students to Your Course</h4>
+            {% for course in teacher_courses %}
+                <div class="mb-3">
+                    <strong>{{ course.name }}</strong>
+                    <ul class="list-group mt-2">
+                        {% for student in students %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ student.username }}
+                                <a href="?assign_student=1&student_id={{ student.id }}&course_id={{ course.id }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Assign to {{ course.name }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- View Enrolled Students -->
+        <div class="card">
+            {% for course, enrollments in students_enrolled %}
+                <div class="course-section">
+                    <h4>{{ course.name }} - Enrolled Students</h4>
+                    <ul>
+                        {% for enrollment in enrollments %}
+                            <li>
+                                {{ enrollment.student.username }}
+                                <form method="post" action="{% url 'teacher_dashboard' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="remove_student" value="true">
+                                    <input type="hidden" name="student_id" value="{{ enrollment.student.id }}">
+                                    <input type="hidden" name="course_id" value="{{ course.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                                </form>
+                            </li>
+                        {% empty %}
+                            <li>No students enrolled.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- View & Edit Assignments -->
+        <div class="card">
+            <h4>Your Assignments</h4>
+            {% for assignment in assignments %}
+                <div class="mb-3">
+                    <h5>Assignments for {{ assignment.course.name }}:</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <b>{{ assignment.title }}</b> - Due: {{ assignment.due_date }}<br>
+                            {{ assignment.description }}<br>
+                            <a href="{{ assignment.assignment_file.url }}" target="_blank">View Assignment</a>
+                            <button class="btn btn-warning btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#editAssignmentModal{{ assignment.id }}">Edit</button>
+
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="remove_assignment" value="true">
+                                <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                                <button type="submit" class="btn btn-danger btn-sm mt-2">Delete</button>
+                            </form>
+
+                            <!-- Edit Modal -->
+                            <div class="modal fade" id="editAssignmentModal{{ assignment.id }}" tabindex="-1" aria-labelledby="editAssignmentModalLabel{{ assignment.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Edit Assignment</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form method="POST" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            <div class="modal-body">
+                                                <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Assignment Title</label>
+                                                    <input type="text" class="form-control" name="title" value="{{ assignment.title }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Assignment Description</label>
+                                                    <textarea class="form-control" name="description" required>{{ assignment.description }}</textarea>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Due Date</label>
+                                                    <input type="date" class="form-control" name="due_date" value="{{ assignment.due_date }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Assignment File</label>
+                                                    <input type="file" class="form-control" name="assignment_file">
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                <button type="submit" name="edit_assignment" class="btn btn-primary">Save changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Upload Assignment -->
+        <div class="card">
+            <h4>Upload Assignment</h4>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label>Course:</label>
+                    <select name="course" class="form-control" required>
+                        <option value="" disabled selected>Select a course</option>
+                        {% for course in teacher_courses %}
+                            <option value="{{ course.id }}">{{ course.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Title:</label>
+                    <input type="text" name="title" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Description:</label>
+                    <textarea name="description" class="form-control" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label>Due Date:</label>
+                    <input type="date" name="due_date" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Upload File:</label>
+                    <input type="file" name="assignment_file" class="form-control" required>
+                </div>
+                <button type="submit" name="upload_assignment" class="btn btn-primary">Upload Assignment</button>
+            </form>
+        </div>
+
+        <!-- Upload MCQ Test -->
+        <div class="card">
+            <h4>Upload MCQ Test</h4>
+            <form method="post" id="mcqForm">
+                {% csrf_token %}
+                <input type="hidden" name="upload_test" value="1">
+                <input type="hidden" name="question_count" id="questionCountHidden">
+
+                <div class="mb-3">
+                    <label>Course:</label>
+                    <select name="course" class="form-control" required>
+                        <option value="" disabled selected>Select a course</option>
+                        {% for course in teacher_courses %}
+                            <option value="{{ course.id }}">{{ course.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Test Title:</label>
+                    <input type="text" name="title" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Total Questions:</label>
+                    <select class="form-control" id="questionCount" required>
+                        <option value="" disabled selected>Select number</option>
+                        {% for i in 1|to_range:11 %}
+                            <option value="{{ i }}">{{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="questionContainer"></div>
+
+                <button type="submit" class="btn btn-primary mt-3">Upload Test</button>
+            </form>
+        </div>
+
+        <!-- View MCQ Tests -->
+<div class="card">
+    <h4>Your MCQ Tests</h4>
+    {% for test in tests %}
+        <div class="mb-3">
+            <h5>Test for {{ test.course.name }}:</h5>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <b>{{ test.title }}</b> - {{ test.course.name }}
+                    </div>
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="delete_test" value="1">
+                        <input type="hidden" name="test_id" value="{{ test.id }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    {% endfor %}
+    {% if not tests %}
+        <p>No tests uploaded yet.</p>
+    {% endif %}
+
+</div>
+<!-- Upload Test Source Document -->
+<div class="card">
+    <h4>Upload Document for Auto-generated Test</h4>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="upload_test_doc" value="1">
+        {{ doc_form.as_p }}
+        <button type="submit" class="btn btn-primary">Upload Document</button>
+    </form>
+</div>
+
+<!-- View Uploaded Documents -->
+<div class="card">
+    <h4>Uploaded Documents</h4>
+    {% if test_docs %}
+        <ul class="list-group">
+            {% for doc in test_docs %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        Course: {{ doc.course.name }} -> {{ doc.title }}
+                    </div>
+                    <div>
+                        <a href="{% url 'view_generated_test' doc.id %}" class="btn btn-sm btn-outline-primary">Generate & View Test</a>
+                        <a href="{{ doc.uploaded_file.url }}" class="btn btn-sm btn-outline-success" target="_blank">View</a>
+                        <form method="post" action="{% url 'teacher_dashboard' %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="delete_test_doc" value="1">
+                            <input type="hidden" name="doc_id" value="{{ doc.id }}">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No documents uploaded yet.</p>
+    {% endif %}
+</div>
+
+
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById("questionCount").addEventListener("change", function () {
+            const count = parseInt(this.value);
+            document.getElementById("questionCountHidden").value = count;
+            const container = document.getElementById("questionContainer");
+            container.innerHTML = "";
+
+            for (let i = 1; i <= count; i++) {
+                container.innerHTML += `
+                    <div class="mb-3 border rounded p-3 bg-light">
+                        <label><strong>Question ${i}:</strong></label>
+                        <input type="text" name="question${i}" class="form-control mb-2" required>
+
+                        <input type="text" name="q${i}_option1" placeholder="Option 1" class="form-control mb-1" required>
+                        <input type="text" name="q${i}_option2" placeholder="Option 2" class="form-control mb-1" required>
+                        <input type="text" name="q${i}_option3" placeholder="Option 3" class="form-control mb-1" required>
+                        <input type="text" name="q${i}_option4" placeholder="Option 4" class="form-control mb-1" required>
+
+                        <input type="number" name="q${i}_correct" placeholder="Correct Option (1-4)" class="form-control" min="1" max="4" required>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

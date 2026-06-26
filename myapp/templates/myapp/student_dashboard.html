@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" />
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        nav {
+            background-color: #2f3d4b;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .container {
+            max-width: 900px;
+            padding: 30px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .btn, .badge {
+            padding: 5px 13px;
+            font-size: 0.9rem;
+            border-radius: 5px;
+            transition: 0.3s ease-in-out;
+            text-align: center;
+        }
+        .btn-sm {
+            width: auto;
+            min-width: 90px;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        input[type="file"] {
+            padding: 5px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    Student Dashboard
+    <div class="logout-btn">
+        <a href="{% url 'logout' %}">
+            <button class="btn btn-light btn-sm">Logout</button>
+        </a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <h4>Welcome, {{ user.username }}!</h4>
+    </div>
+
+    <h4>Your Courses & Assignments:</h4>
+    {% for course in student_courses %}
+        <div class="card">
+            <div class="mb-3">
+                <strong>{{ course.name }}</strong>
+            </div>
+
+            {% for assignment in assignments %}
+                {% if assignment.course.id == course.id %}
+                    <div class="mb-3 p-3 border rounded">
+                        <p><strong>{{ assignment.title }}</strong> - {{ assignment.description }}</p>
+                        <p><small class="text-danger">Due: {{ assignment.due_date }}</small></p>
+
+                        {% if assignment.id in submitted_assignments_ids %}
+                            <span class="badge bg-success">Submitted ✓</span>
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                                <button type="submit" name="unsubmit_assignment" class="btn btn-warning btn-sm ms-2">Unsubmit</button>
+                            </form>
+                        {% else %}
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                                <input type="file" name="assignment_file" required class="form-control mb-2" />
+                                <button type="submit" name="upload_assignment" class="btn btn-primary btn-sm">Upload</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% empty %}
+        <div class="card">
+            <p>You are not enrolled in any courses yet.</p>
+        </div>
+    {% endfor %}
+
+    <h4>Your Tests:</h4>
+{% for course, tests in tests_by_course.items %}
+    <div class="card">
+        <div class="mb-3">
+            <strong>{{ course.name }}</strong>
+        </div>
+
+        {% if tests %}
+            {% for test in tests %}
+                <div class="mb-3 p-3 border rounded">
+                    <p><strong>{{ test.title }}</strong> - {{ test.description }}</p>
+
+                    {% if test.id in submitted_test_ids %}
+                        <span class="badge bg-success">Submitted ✓</span>
+                        <a href="{% url 'test_result' test.id %}" class="btn btn-warning btn-sm ms-2">Result</a>
+                    {% else %}
+                        <a href="{% url 'solve_test' test.id %}" class="btn btn-success btn-sm">Take Test</a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No tests available for this course yet.</p>
+        {% endif %}
+    </div>
+{% endfor %}
+
+<h4 class="mt-5">AI-Generated Tests:</h4>
+{% for doc in ai_tests %}
+    <div class="card">
+        <div class="mb-3">
+            <strong>{{ doc.title }}</strong> (Course: {{ doc.course.name }})
+        </div>
+
+        <div class="mb-3 p-3 border rounded">
+            {% if doc.qna_id in submitted_ai_test_ids %}
+                <span class="badge bg-success">Submitted ✓</span>
+                <a href="{% url 'view_ai_test_result' qna_id=doc.qna_id %}" class="btn btn-warning btn-sm ms-2">Result</a>
+
+            {% else %}
+                <a href="{% url 'solve_ai_test' doc.qna_id %}" class="btn btn-primary btn-sm">Take Test</a>
+            {% endif %}
+        </div>
+    </div>
+{% empty %}
+    <div class="card">
+        <p>No AI-generated tests available yet.</p>
+    </div>
+{% endfor %}
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
